@@ -1,5 +1,3 @@
-export const config = { api: { responseLimit: false } };
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -14,8 +12,7 @@ export default async function handler(req, res) {
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-beta': 'interleaved-thinking-2025-05-14'
+        'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
@@ -28,9 +25,7 @@ export default async function handler(req, res) {
     const data = await response.json();
     if (!data.content) return res.status(500).json({ error: 'API error', details: data });
 
-    const textBlock = data.content.find(b => b.type === 'text');
-    const text = textBlock ? textBlock.text : '';
-
+    const text = data.content[0].text;
     const titleMatch = text.match(/TITLE:\s*(.+)/);
     const descMatch = text.match(/DESCRIPTION:\s*([\s\S]+?)(?=\nTAGS:|$)/);
     const tagsMatch = text.match(/TAGS:\s*([\s\S]+)/);
@@ -54,7 +49,6 @@ TITLE FORMAT: [Niche] Phone Case [Simple Keywords] Cover
 - Always mention the franchise/show/game when listing a character (e.g. "Levi Ackerman Phone Case Attack on Titan Anime Cover")
 - NEVER use song names, album names, lore terms, fandom slang, or overly specific references
 - Good: "Spider Man Phone Case Marvel Hero Cover" | Bad: "Spider Man Phone Case Web Slinger Cover"
-- Good: "Felix Phone Case Stray Kids Kpop Cover" | Bad: "Felix Phone Case SKZ Stay Fandom Cover"
 
 BRAND TAG RULES (always include):
 - Disney listings → always include "disney phone case" as one of the tags
@@ -70,49 +64,29 @@ BRAND TAG RULES (always include):
 TAG RULES:
 - Every tag STRICTLY under 20 characters including spaces
 - NEVER repeat the same keyword across tags
-- All keywords must be simple and searchable
 
 ${variation === '1' ? `VARIATION A — 3 TAGS:
-DESCRIPTION FORMAT (2 sentences only):
-"When you choose this [Full Title], you're picking a design inspired by [niche], blending [simple energy description] and bold [simple aesthetic] vibes. while keeping your device protected and stylish [2-3 relevant emojis]"
-
-TAGS FORMAT (exactly 3, each under 20 chars, no repeated keywords):
-Tag 1: [niche] phone case
-Tag 2: [franchise/related] case
-Tag 3: [simple keyword] phone case`
+DESCRIPTION: "When you choose this [Full Title], you're picking a design inspired by [niche], blending [energy] and bold [aesthetic] vibes. while keeping your device protected and stylish [2-3 emojis]"
+TAGS: exactly 3, each under 20 chars`
 : `VARIATION B — 4 TAGS:
-DESCRIPTION FORMAT (detailed gift-style, 3 sentences):
-"Add a [adjective] touch to your phone with this [niche] phone case inspired by [source/franchise]. Perfect for fans of [style], [aesthetic], and [theme], this case gives your phone a [look] while helping protect it from everyday scratches and minor bumps. A lovely gift idea for [fan type], [fan type], and anyone who enjoys [description] for iPhone, Samsung Galaxy, and Google Pixel models."
+DESCRIPTION: "Add a [adjective] touch to your phone with this [niche] phone case inspired by [franchise]. Perfect for fans of [style], [aesthetic], and [theme], this case gives your phone a [look] while helping protect it from everyday scratches and minor bumps. A lovely gift idea for [fan type], [fan type], and anyone who enjoys [description] for iPhone, Samsung Galaxy, and Google Pixel models."
+TAGS: exactly 4, each under 20 chars`}
 
-TAGS FORMAT (exactly 4, each under 20 chars, no repeated keywords):
-Tag 1: [niche] phone case — main keyword + "phone case"
-Tag 2: [franchise/related] case — different keyword + "case"
-Tag 3: [simple keyword] cover — different keyword + "cover"
-Tag 4: [niche alone] — just the main keyword`}
-
-OUTPUT FORMAT (respond with ONLY this, no extra text):
+OUTPUT FORMAT (respond with ONLY this):
 TITLE: [title here]
 DESCRIPTION: [description here]
 TAGS: [tag1], [tag2], [tag3]${variation === '2' ? ', [tag4]' : ''}`;
   } else {
-    return `You are an expert Etsy SEO listing generator for art posters. Generate optimized poster listings.
+    return `You are an expert Etsy SEO listing generator for art posters.
 
-${variation === '1' ? `VARIATION A — KEYWORD-DENSE POSTER STYLE:
-
-TITLE FORMAT (CRITICAL: must be as close to 140 characters as possible — aim for 135-140 characters, comma-separated keywords):
-Format like: "[Character] [Franchise] Poster, [Keyword] Wall Art, [Keyword] Print, [Room Type] Decor, [Audience] Gift, [Theme] Artwork Print"
-IMPORTANT: Count characters carefully. Keep adding keywords with commas until you reach 135-140 characters. Never stop short at under 120 characters.
-
-DESCRIPTION FORMAT:
-Start with an engaging opening about the artwork (2-3 sentences describing what's depicted and the mood).
-Then add: "Perfect for [audience type], [audience type], and lovers of [style], this poster adds [quality 1], [quality 2], and [quality 3] to any room."
-Then a second paragraph about specific visual details and room placement options.
-Then include these sections EXACTLY as formatted:
+${variation === '1' ? `VARIATION A:
+TITLE: keyword-dense, comma-separated, MUST be 135-140 characters exactly. Keep adding keywords until you hit 135-140 chars.
+DESCRIPTION: engaging opening 2-3 sentences, then "Perfect for..." sentence, then visual details paragraph, then:
 
 ✨ Poster Details
 • Premium high-resolution print quality
 • [Niche]-inspired artwork
-• [Specific visual detail about the design]
+• [Specific visual detail]
 • Perfect for bedrooms, gaming rooms, offices, home cinemas, and gallery walls
 • Poster only — frame NOT included
 
@@ -123,7 +97,7 @@ Inches:
 5×7", 6×8", 11×14", 11×17", 12×16", 12×18", 16×20", 16×24", 18×24", 20×28", 24×32", 24×36", 28×40", 30×40"
 
 🎁 Perfect Gift For
-[List 5-6 relevant audience types]
+[5-6 audience types]
 
 💾 Digital Download Option
 Choose digital download and receive a high-resolution printable file within 10 hours after purchase.
@@ -131,22 +105,14 @@ Choose digital download and receive a high-resolution printable file within 10 h
 🚚 Shipping
 Free worldwide shipping on all physical poster orders.
 
-TAGS FORMAT (exactly 13 tags, natural keyword phrases):
-[niche] poster, [franchise] wall art, [keyword] poster, [keyword] wall art, [franchise] poster, [theme] wall decor, [niche] art, [audience] gift, [room type] decor, [keyword] wall art, [style] poster, [keyword] print, [theme] poster`
-: `VARIATION B — PREMIUM CRAFTSMANSHIP POSTER STYLE:
-
-TITLE FORMAT (CRITICAL: must be as close to 140 characters as possible — aim for 135-140 characters):
-Format like: "⭐ [Character] — [Franchise] [Type] Poster ⭐, [Keyword] Wall Art, [Keyword] Print, [Room Type] Decor, [Audience] Gift"
-IMPORTANT: Count characters carefully. Keep adding keywords until you reach 135-140 characters. Never stop short at under 120 characters.
-
-DESCRIPTION FORMAT:
-Start with: "Inspired by [source/franchise], this premium poster features [character/subject] [detailed visual description]. [Continue describing the composition, details, colors, setting]. [Final sentence about what makes it striking and who it appeals to]."
-Then: "🔥 Love [theme] wall art and iconic [style] characters? Explore more [franchise], [related theme], and [style] posters in our shop 🔥"
-Then include these sections EXACTLY:
+TAGS: exactly 13 natural keyword phrases`
+: `VARIATION B:
+TITLE: 135-140 characters, can use ⭐ decorative stars, keyword-rich
+DESCRIPTION: "Inspired by [franchise], this premium poster features [detailed description]." then shop promo line, then:
 
 🖤 Features & Craftsmanship
 Deluxe Matte Paper: Printed on premium 170 gsm (65 lb) matte stock with a smooth, non-reflective finish for crisp detail and a gallery-quality look
-[Aesthetic Name]: [Describe the visual style, details, color palette, and setting in one sentence]
+[Aesthetic Name]: [visual style description]
 Eco-Friendly Production: Printed on demand using responsibly sourced, high-quality materials
 Secure Packaging: Carefully rolled and shipped in a rigid protective tube to arrive in perfect condition
 
@@ -168,12 +134,11 @@ Worldwide Shipping: Available to customers worldwide
 Secure Packaging: Carefully rolled and shipped in a durable protective tube to arrive in excellent condition
 Please Note: Frame not included.
 
-⭐ [Character]. [Short iconic description]. [One word]. [Relevant emoji]
+⭐ [Character]. [Short description]. [One word]. [emoji]
 
-TAGS FORMAT (exactly 13 tags, natural keyword phrases):
-[character/niche], [character] [type], [franchise] poster, [franchise] wall art, [character] art, [related character/theme], [niche] art, [keyword] poster, [franchise] decor, [keyword] wall art, [character] poster, [franchise] fan gift, [theme] wall art`}
+TAGS: exactly 13 natural keyword phrases`}
 
-OUTPUT FORMAT (respond with ONLY this, no extra text):
+OUTPUT FORMAT (respond with ONLY this):
 TITLE: [title here]
 DESCRIPTION: [description here]
 TAGS: [tag1], [tag2], [tag3], [tag4], [tag5], [tag6], [tag7], [tag8], [tag9], [tag10], [tag11], [tag12], [tag13]`;
