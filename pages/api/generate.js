@@ -126,17 +126,20 @@ Inches:
   if (variation === '1') {
     return `You are an Etsy SEO expert for art posters. Look at the image and generate a listing.
 
-TITLE RULES - CRITICAL:
-- Format: "[Subject] Poster, [Franchise] Wall Art, [Style] Print, [Theme] Decor, [Audience] Gift, [Style] Artwork Print"
-- Use commas to separate all keyword phrases
-- Example: "Sade No Ordinary Love Poster, Sade Adu Wall Art, Soul R&B Music Print, Red Bedroom Decor, Singer Fan Gift, Vintage Album Artwork Print"
-- MUST be 135-140 characters. Count every character. Keep adding comma-separated keywords until you reach 135-140 chars. NEVER submit under 130 characters.
+TITLE RULES:
+- Format: "[Subject] Poster - [Franchise/Style] Wall Art, [Specific Detail] Print, [Room Type] Decor"
+- Use a hyphen (-) after the first phrase, then commas
+- Aim for 80-120 characters
+- Examples:
+  "Spider-Man Camera Poster - Marvel Wall Art, Peter Parker Photography Print, Superhero Decor"
+  "My Neighbor Totoro Poster - Studio Ghibli Wall Art, Totoro Forest Print, Cozy Anime Decor"
+  "Olivia Rodrigo Poster - Pop Star Wall Art, GUTS & SOUR Music Print, Modern Bedroom Decor"
 
 DESCRIPTION FORMAT - follow EXACTLY with these emoji headers and bullet points:
 
 Write 2 sentences describing what you see in the image and its mood.
 Then: "Perfect for [specific audiences], this poster adds [3 qualities] to any room."
-Then 2 sentences about visual details, colors, composition, and room placement.
+Then 2 sentences about visual details, colors, composition, and which rooms it suits.
 Then add EXACTLY:
 
 \u2728 Poster Details
@@ -158,7 +161,8 @@ Choose digital download and receive a high-resolution printable file within 10 h
 \ud83d\ude9a Shipping
 Free worldwide shipping on all physical poster orders.
 
-TAGS: exactly 13 natural keyword phrases
+TAGS: exactly 13 tags following this pattern:
+- [subject] poster, [franchise] poster, [subject] wall art, [franchise] wall art, [style] art, [subject] print, [theme] decor, wall decor, [audience] gift, [room] decor, [keyword] art, [style] poster, [franchise] decor
 
 RESPOND WITH ONLY:
 TITLE: xxx
@@ -168,21 +172,22 @@ TAGS: tag1, tag2, tag3, tag4, tag5, tag6, tag7, tag8, tag9, tag10, tag11, tag12,
 
   return `You are an Etsy SEO expert for art posters. Look at the image and generate a listing EXACTLY matching this format and spacing.
 
-TITLE RULES - CRITICAL:
-- Format MUST be: "[Subject] Poster - [Franchise] Wall Art, [Keyword] Print, [Theme] Decor, [Audience] Gift, [Style] Art"
-- Use a hyphen-minus (-) after the first phrase, then commas for the rest
-- Example: "Miles Morales Poster - Spider-Verse Wall Art, Spider-Man Falling Print, Marvel Superhero Decor, Gaming Room Art, Comic Fan Gift, Marvel Art"
-- MUST be 135-140 characters. Count every single character including spaces. Keep adding keywords until 135-140 chars.
-- NEVER use em dashes (\u2014) or stars (\u2b50) in the title
-- NEVER use format like "\u2b50 Subject \u2014 Description \u2b50"
+TITLE RULES:
+- Format: "[Subject] Poster - [Franchise] Wall Art, [Specific Detail] Print, [Room Type] Decor"
+- Use a hyphen (-) after the first phrase, then commas
+- Aim for 80-120 characters
+- Examples:
+  "Spider-Man Camera Poster - Marvel Wall Art, Peter Parker Photography Print, Superhero Decor"
+  "My Neighbor Totoro Poster - Studio Ghibli Wall Art, Totoro Forest Print, Cozy Anime Decor"
+  "Twenty One Pilots Red Poster - Alternative Rock Wall Art, Music Band Print, Concert Room Decor"
 
 DESCRIPTION - copy this structure EXACTLY including all blank lines between sections:
 
-[relevant topic emoji] [Subject name] \u2014 [Descriptive subtitle] [same emoji]
+[relevant topic emoji] [Subject] \u2014 [Descriptive subtitle] [same emoji]
 
 Inspired by [franchise/source], this premium poster features [very detailed description of what you see: subject, pose, colors, background, composition, art style, mood, specific details].
 
-[One sentence about who this appeals to and what makes it a statement piece for their space].
+[One sentence about who this appeals to and what makes it a statement piece].
 
 \ud83d\udd25 Love [theme] wall art and [style] art? Explore more [franchise], [related], and [style] posters in our shop \ud83d\udd25
 
@@ -220,9 +225,10 @@ Secure Packaging: Carefully rolled and shipped in a durable protective tube to a
 
 Please Note: Frame not included.
 
-[same topic emoji] [Short punchy 4-6 word phrase]. [One powerful inspiring sentence about the subject]. [1-2 relevant emojis]
+[same topic emoji] [Short punchy 4-6 word phrase]. [One powerful inspiring sentence]. [1-2 relevant emojis]
 
-TAGS: exactly 13 natural keyword phrases
+TAGS: exactly 13 tags following this pattern:
+- [subject] poster, [franchise] poster, [subject] wall art, [franchise] wall art, [style] art, [subject] print, [theme] decor, wall decor, [audience] gift, [room] decor, [keyword] art, [style] poster, [franchise] decor
 
 RESPOND WITH ONLY:
 TITLE: xxx
