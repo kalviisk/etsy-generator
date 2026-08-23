@@ -133,7 +133,6 @@ TITLE RULES:
 - Examples:
   "Spider-Man Camera Poster - Marvel Wall Art, Peter Parker Photography Print, Superhero Decor"
   "My Neighbor Totoro Poster - Studio Ghibli Wall Art, Totoro Forest Print, Cozy Anime Decor"
-  "Olivia Rodrigo Poster - Pop Star Wall Art, GUTS & SOUR Music Print, Modern Bedroom Decor"
 
 DESCRIPTION FORMAT - follow EXACTLY with these emoji headers and bullet points:
 
@@ -161,8 +160,8 @@ Choose digital download and receive a high-resolution printable file within 10 h
 \ud83d\ude9a Shipping
 Free worldwide shipping on all physical poster orders.
 
-TAGS: exactly 13 tags following this pattern:
-- [subject] poster, [franchise] poster, [subject] wall art, [franchise] wall art, [style] art, [subject] print, [theme] decor, wall decor, [audience] gift, [room] decor, [keyword] art, [style] poster, [franchise] decor
+TAGS: exactly 13 tags:
+[subject] poster, [franchise] poster, [subject] wall art, [franchise] wall art, [style] art, [subject] print, [theme] decor, wall decor, [audience] gift, [room] decor, [keyword] art, [style] poster, [franchise] decor
 
 RESPOND WITH ONLY:
 TITLE: xxx
@@ -170,32 +169,33 @@ DESCRIPTION: xxx
 TAGS: tag1, tag2, tag3, tag4, tag5, tag6, tag7, tag8, tag9, tag10, tag11, tag12, tag13`;
   }
 
-  return `You are an Etsy SEO expert for art posters. Look at the image and generate a listing EXACTLY matching this format and spacing.
+  return `You are an Etsy SEO expert for art posters. Look at the image and generate a listing matching this EXACT format.
 
-TITLE RULES:
-- Format: "[Subject] Poster - [Franchise] Wall Art, [Specific Detail] Print, [Room Type] Decor"
-- Use a hyphen (-) after the first phrase, then commas
-- Aim for 80-120 characters
-- Examples:
-  "Spider-Man Camera Poster - Marvel Wall Art, Peter Parker Photography Print, Superhero Decor"
-  "My Neighbor Totoro Poster - Studio Ghibli Wall Art, Totoro Forest Print, Cozy Anime Decor"
-  "Twenty One Pilots Red Poster - Alternative Rock Wall Art, Music Band Print, Concert Room Decor"
+TITLE RULES - VERY IMPORTANT:
+- Format: "[Subject] Poster - [Franchise] Wall Art, [Specific Detail] Print, [Room/Theme] Decor, [Audience] Gift, [Style] Artwork"
+- Use a hyphen (-) after "Poster", then commas separating each keyword phrase
+- MUST be between 100-140 characters. Keep adding keyword phrases until you reach at least 100 characters.
+- Examples of correct titles:
+  "Miles Morales Poster - Spider-Verse Wall Art, Spider-Man Falling Print, Marvel Superhero Decor, Gaming Room Art, Comic Fan Gift, Marvel Art" (139 chars)
+  "Twenty One Pilots Red Poster - Alternative Rock Wall Art, Music Band Print, Concert Room Decor" (94 chars)
+  "Darth Vader Poster - Star Wars Wall Art, Red Lightsaber Sith Print, Dark Side Decor, Sci-Fi Gift, Cinematic Star Wars Art" (121 chars)
+- NEVER use em dashes or stars in the title
 
-DESCRIPTION - copy this structure EXACTLY including all blank lines between sections:
+DESCRIPTION - copy this structure EXACTLY including blank lines between every section and paragraph:
 
-[relevant topic emoji] [Subject] \u2014 [Descriptive subtitle] [same emoji]
+[topic-relevant emoji] [Subject] \u2014 [Descriptive subtitle] [same emoji]
 
-Inspired by [franchise/source], this premium poster features [very detailed description of what you see: subject, pose, colors, background, composition, art style, mood, specific details].
+Inspired by [franchise/source], this premium poster features [very detailed description of exactly what you see in the image: subject appearance, pose, colors, background, art style, lighting, mood, specific details].
 
-[One sentence about who this appeals to and what makes it a statement piece].
+[One sentence about who this appeals to and why it makes a powerful statement piece].
 
-\ud83d\udd25 Love [theme] wall art and [style] art? Explore more [franchise], [related], and [style] posters in our shop \ud83d\udd25
+\ud83d\udd25 Love [theme] wall art and [style] art? Explore more [franchise], [related style], and [theme] posters in our shop \ud83d\udd25
 
-\ud83d\udd24 Features & Craftsmanship
+\u2764\ufe0f Features & Craftsmanship
 
 Deluxe Matte Paper: Printed on premium 170 gsm (65 lb) matte stock with a smooth, non-reflective finish for crisp detail and a gallery-quality look
 
-[Aesthetic Name based on image style]: [Describe the specific colors, composition, visual style, and details you see]
+[Aesthetic Name that matches the image style]: [Detailed description of the specific visual style, color palette, composition, and artistic details visible in the image]
 
 Eco-Friendly Production: Printed on demand using responsibly sourced, high-quality materials
 
@@ -209,9 +209,9 @@ Need a custom size? Message me anytime.
 
 [same topic emoji] Perfect For
 
-Bedrooms, gaming rooms, [relevant room types], and entertainment spaces with a [theme] centerpiece
+Bedrooms, gaming rooms, [2-3 more relevant room types], and entertainment spaces with a [theme] centerpiece
 
-Interiors inspired by [subject], [franchise], [related themes], and [style] aesthetics
+Interiors inspired by [subject], [franchise], [related theme], and [style] aesthetics
 
 A gift for [fan type 1], [fan type 2], [fan type 3], [fan type 4], and [theme] enthusiasts
 
@@ -225,10 +225,10 @@ Secure Packaging: Carefully rolled and shipped in a durable protective tube to a
 
 Please Note: Frame not included.
 
-[same topic emoji] [Short punchy 4-6 word phrase]. [One powerful inspiring sentence]. [1-2 relevant emojis]
+[same topic emoji] [Short punchy 4-6 word phrase about the subject]. [One powerful sentence]. [1-2 relevant emojis]
 
-TAGS: exactly 13 tags following this pattern:
-- [subject] poster, [franchise] poster, [subject] wall art, [franchise] wall art, [style] art, [subject] print, [theme] decor, wall decor, [audience] gift, [room] decor, [keyword] art, [style] poster, [franchise] decor
+TAGS: exactly 13 tags:
+[subject] poster, [franchise] poster, [subject] wall art, [franchise] wall art, [style] art, [subject] print, [theme] decor, wall decor, [audience] gift, [room] decor, [keyword] art, [style] poster, [franchise] decor
 
 RESPOND WITH ONLY:
 TITLE: xxx
