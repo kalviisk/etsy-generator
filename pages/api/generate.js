@@ -22,14 +22,8 @@ export default async function handler(req, res) {
     messages = [{
       role: 'user',
       content: [
-        {
-          type: 'image',
-          source: { type: 'base64', media_type: mediaType || 'image/jpeg', data: imageBase64 }
-        },
-        {
-          type: 'text',
-          text: 'Look at this poster image carefully and generate a complete Etsy listing for it based on what you see.'
-        }
+        { type: 'image', source: { type: 'base64', media_type: mediaType || 'image/jpeg', data: imageBase64 } },
+        { type: 'text', text: 'Look at this poster image carefully and generate a complete Etsy listing based on what you see.' }
       ]
     }];
   } else {
@@ -80,17 +74,158 @@ export default async function handler(req, res) {
 
 function getPhonePrompt(variation) {
   if (variation === '1') {
-    return 'You are an Etsy SEO expert for phone cases. STRICT RULES:\n\nTITLE: [Niche] Phone Case [Simple Keywords] Cover\n- Always mention franchise for characters (e.g. "Levi Ackerman Phone Case Attack on Titan Anime Cover")\n- Simple searchable keywords only, never fandom slang or song names\n\nBRAND TAGS - always include one of these when relevant:\n- Disney: include "disney phone case"\n- Ghibli: include "ghibli phone case"\n- Star Wars: include "star wars case"\n- Sanrio: include "sanrio phone case"\n- F1: include "f1 phone case"\n- Marvel: include "marvel phone case"\n- Nintendo: include "nintendo phone case"\n- Anime: include "anime phone case"\n- Kpop: include "kpop phone case"\n\nTAGS: exactly 3 tags, each strictly under 20 characters including spaces, no repeated keywords between tags\n\nDESCRIPTION: "When you choose this [Full Title], you\'re picking a design inspired by [niche], blending [energy] and bold [aesthetic] vibes. while keeping your device protected and stylish [2-3 emojis]"\n\nRESPOND WITH ONLY:\nTITLE: xxx\nDESCRIPTION: xxx\nTAGS: tag1, tag2, tag3';
+    return `You are an Etsy SEO expert for phone cases. STRICT RULES:
+
+TITLE: [Niche] Phone Case [Simple Keywords] Cover
+- Always mention franchise for characters (e.g. "Levi Ackerman Phone Case Attack on Titan Anime Cover")
+- Simple searchable keywords only, never fandom slang or song names
+
+BRAND TAGS - always include one when relevant:
+- Disney: "disney phone case" | Ghibli: "ghibli phone case" | Star Wars: "star wars case"
+- Sanrio: "sanrio phone case" | F1: "f1 phone case" | Marvel: "marvel phone case"
+- Nintendo: "nintendo phone case" | Anime: "anime phone case" | Kpop: "kpop phone case"
+
+TAGS: exactly 3 tags, each strictly under 20 characters including spaces, no repeated keywords
+
+DESCRIPTION: "When you choose this [Full Title], you're picking a design inspired by [niche], blending [energy] and bold [aesthetic] vibes. while keeping your device protected and stylish [2-3 emojis]"
+
+RESPOND WITH ONLY:
+TITLE: xxx
+DESCRIPTION: xxx
+TAGS: tag1, tag2, tag3`;
   }
-  return 'You are an Etsy SEO expert for phone cases. STRICT RULES:\n\nTITLE: [Niche] Phone Case [Simple Keywords] Cover\n- Always mention franchise for characters\n- Simple searchable keywords only, never fandom slang or song names\n\nBRAND TAGS - always include one of these when relevant:\n- Disney: include "disney phone case"\n- Ghibli: include "ghibli phone case"\n- Star Wars: include "star wars case"\n- Sanrio: include "sanrio phone case"\n- F1: include "f1 phone case"\n- Marvel: include "marvel phone case"\n- Nintendo: include "nintendo phone case"\n- Anime: include "anime phone case"\n- Kpop: include "kpop phone case"\n\nTAGS: exactly 4 tags, each strictly under 20 characters including spaces, no repeated keywords between tags\nTag 1: [niche] phone case\nTag 2: [franchise] case\nTag 3: [keyword] cover\nTag 4: [niche alone]\n\nDESCRIPTION: "Add a [adjective] touch to your phone with this [niche] phone case inspired by [franchise]. Perfect for fans of [style], [aesthetic], and [theme], this case gives your phone a [look] while helping protect it from everyday scratches and minor bumps. A lovely gift idea for [fan type] and anyone who enjoys [description] for iPhone, Samsung Galaxy, and Google Pixel models."\n\nRESPOND WITH ONLY:\nTITLE: xxx\nDESCRIPTION: xxx\nTAGS: tag1, tag2, tag3, tag4';
+  return `You are an Etsy SEO expert for phone cases. STRICT RULES:
+
+TITLE: [Niche] Phone Case [Simple Keywords] Cover
+- Always mention franchise for characters
+- Simple searchable keywords only
+
+BRAND TAGS - always include one when relevant:
+- Disney: "disney phone case" | Ghibli: "ghibli phone case" | Star Wars: "star wars case"
+- Sanrio: "sanrio phone case" | F1: "f1 phone case" | Marvel: "marvel phone case"
+- Nintendo: "nintendo phone case" | Anime: "anime phone case" | Kpop: "kpop phone case"
+
+TAGS: exactly 4 tags, each strictly under 20 characters, no repeated keywords
+Tag 1: [niche] phone case | Tag 2: [franchise] case | Tag 3: [keyword] cover | Tag 4: [niche alone]
+
+DESCRIPTION: "Add a [adjective] touch to your phone with this [niche] phone case inspired by [franchise]. Perfect for fans of [style], [aesthetic], and [theme], this case gives your phone a [look] while helping protect it from everyday scratches and minor bumps. A lovely gift idea for [fan type] and anyone who enjoys [description] for iPhone, Samsung Galaxy, and Google Pixel models."
+
+RESPOND WITH ONLY:
+TITLE: xxx
+DESCRIPTION: xxx
+TAGS: tag1, tag2, tag3, tag4`;
 }
 
 function getPosterPrompt(variation) {
-  const sizes = 'Metric:\n13\u00d718 cm, 15\u00d720 cm, 27\u00d735 cm, 28\u00d743 cm, A3 (29.7\u00d742 cm), 30\u00d740 cm, 30\u00d745 cm, 40\u00d750 cm, 40\u00d760 cm, A2 (42\u00d759.4 cm), 45\u00d760 cm, 50\u00d770 cm, A1 (59.4\u00d784.1 cm), 60\u00d780 cm, 60\u00d790 cm, 70\u00d7100 cm, 75\u00d7100 cm\nInches:\n5\u00d77", 6\u00d78", 11\u00d714", 11\u00d717", 12\u00d716", 12\u00d718", 16\u00d720", 16\u00d724", 18\u00d724", 20\u00d728", 24\u00d732", 24\u00d736", 28\u00d740", 30\u00d740"';
+  const sizes = `Metric:
+13\u00d718 cm, 15\u00d720 cm, 27\u00d735 cm, 28\u00d743 cm, A3 (29.7\u00d742 cm), 30\u00d740 cm, 30\u00d745 cm, 40\u00d750 cm, 40\u00d760 cm, A2 (42\u00d759.4 cm), 45\u00d760 cm, 50\u00d770 cm, A1 (59.4\u00d784.1 cm), 60\u00d780 cm, 60\u00d790 cm, 70\u00d7100 cm, 75\u00d7100 cm
+
+Inches:
+5\u00d77", 6\u00d78", 11\u00d714", 11\u00d717", 12\u00d716", 12\u00d718", 16\u00d720", 16\u00d724", 18\u00d724", 20\u00d728", 24\u00d732", 24\u00d736", 28\u00d740", 30\u00d740"`;
 
   if (variation === '1') {
-    return 'You are an Etsy SEO expert for art posters. Look at the image and generate a listing EXACTLY matching this format:\n\nTITLE RULES:\n- Comma-separated keywords describing the poster content\n- MUST be between 135-140 characters total — count carefully, keep adding keywords until you reach 135-140 chars\n- Format: "[Subject] Poster, [Franchise/Artist] Wall Art, [Style] Print, [Color/Theme] Decor, [Audience] Fan Gift, [Style] Artwork Print"\n- Example (139 chars): "Sade No Ordinary Love Poster, Sade Adu Wall Art, Soul R&B Music Print, Red Bedroom Decor, Singer Fan Gift, Vintage Album Artwork Print"\n\nDESCRIPTION FORMAT - follow this EXACTLY:\n\nFirst write 2 sentences describing the artwork and its mood.\nThen write: "Perfect for [specific audiences], this poster adds [3 qualities] to any room."\nThen write 2 sentences about specific visual details (colors, composition, style) and which rooms it suits.\nThen add EXACTLY this block with bullet points and proper emoji headers:\n\n\u2728 Poster Details\n\u2022 Premium high-resolution print quality\n\u2022 [Subject from image]-inspired artwork\n\u2022 [One specific visual detail from the image]\n\u2022 Perfect for bedrooms, gaming rooms, offices, home cinemas, and gallery walls\n\u2022 Poster only \u2014 frame NOT included\n\n\ud83d\udcd0 Sizes Available\n' + sizes + '\n\n\ud83c\udf81 Perfect Gift For\n[List 6-7 specific audience types based on the image content], and [final type].\n\n\ud83d\udcbe Digital Download Option\nChoose digital download and receive a high-resolution printable file within 10 hours after purchase.\n\n\ud83d\ude9a Shipping\nFree worldwide shipping on all physical poster orders.\n\nTAGS: exactly 13 natural keyword phrases describing the poster\n\nRESPOND WITH ONLY:\nTITLE: xxx\nDESCRIPTION: xxx\nTAGS: tag1, tag2, tag3, tag4, tag5, tag6, tag7, tag8, tag9, tag10, tag11, tag12, tag13';
+    return `You are an Etsy SEO expert for art posters. Look at the image and generate a listing.
+
+TITLE RULES - CRITICAL:
+- Format: "[Subject] Poster, [Franchise] Wall Art, [Style] Print, [Theme] Decor, [Audience] Gift, [Style] Artwork Print"
+- Use commas to separate all keyword phrases
+- Example: "Sade No Ordinary Love Poster, Sade Adu Wall Art, Soul R&B Music Print, Red Bedroom Decor, Singer Fan Gift, Vintage Album Artwork Print"
+- MUST be 135-140 characters. Count every character. Keep adding comma-separated keywords until you reach 135-140 chars. NEVER submit under 130 characters.
+
+DESCRIPTION FORMAT - follow EXACTLY with these emoji headers and bullet points:
+
+Write 2 sentences describing what you see in the image and its mood.
+Then: "Perfect for [specific audiences], this poster adds [3 qualities] to any room."
+Then 2 sentences about visual details, colors, composition, and room placement.
+Then add EXACTLY:
+
+\u2728 Poster Details
+\u2022 Premium high-resolution print quality
+\u2022 [Subject from image]-inspired artwork
+\u2022 [One specific visual detail from image]
+\u2022 Perfect for bedrooms, gaming rooms, offices, home cinemas, and gallery walls
+\u2022 Poster only \u2014 frame NOT included
+
+\ud83d\udcd0 Sizes Available
+${sizes}
+
+\ud83c\udf81 Perfect Gift For
+[List 6-7 specific audience types], and [final type].
+
+\ud83d\udcbe Digital Download Option
+Choose digital download and receive a high-resolution printable file within 10 hours after purchase.
+
+\ud83d\ude9a Shipping
+Free worldwide shipping on all physical poster orders.
+
+TAGS: exactly 13 natural keyword phrases
+
+RESPOND WITH ONLY:
+TITLE: xxx
+DESCRIPTION: xxx
+TAGS: tag1, tag2, tag3, tag4, tag5, tag6, tag7, tag8, tag9, tag10, tag11, tag12, tag13`;
   }
 
-  return 'You are an Etsy SEO expert for art posters. Look at the image and generate a listing EXACTLY matching this format:\n\nTITLE RULES:\n- MUST be between 135-140 characters total — count carefully\n- Keyword-rich, can start with \u2b50 [Subject] \u2014 [Franchise] [Type] Poster \u2b50\n- Keep adding keywords until 135-140 chars\n\nDESCRIPTION FORMAT - follow this EXACTLY:\n\nStart: "Inspired by [what you see], this premium poster features [detailed visual description of composition, colors, mood, details]."\nThen: "[Sentence about who it appeals to and what makes it a statement piece]."\nThen: "\ud83d\udd25 Love [theme] wall art and iconic [style]? Explore more [related styles] posters in our shop \ud83d\udd25"\nThen add EXACTLY:\n\n\ud83d\udd24 Features & Craftsmanship\nDeluxe Matte Paper: Printed on premium 170 gsm (65 lb) matte stock with a smooth, non-reflective finish for crisp detail and a gallery-quality look\n[Aesthetic Name from image]: [Describe the visual style, color palette, composition details]\nEco-Friendly Production: Printed on demand using responsibly sourced, high-quality materials\nSecure Packaging: Carefully rolled and shipped in a rigid protective tube to arrive in perfect condition\n\n\ud83d\udcd0 Available Sizes\n' + sizes + '\nNeed a custom size? Message me anytime.\n\n\u2b50 Perfect For\nBedrooms, gaming rooms, movie rooms, offices, and entertainment spaces with a [theme] centerpiece\nInteriors inspired by [subject], [franchise/style], and [related themes]\nA gift for [fan type 1], [fan type 2], [fan type 3], and [theme] enthusiasts\n\n\ud83d\udce6 Shipping Info\nProcessing Time: Orders are prepared and shipped within 1 business day\nWorldwide Shipping: Available to customers worldwide\nSecure Packaging: Carefully rolled and shipped in a durable protective tube to arrive in excellent condition\nPlease Note: Frame not included.\n\n\u2b50 [Subject from image]. [3-word description]. [One powerful word]. [relevant emoji]\n\nTAGS: exactly 13 natural keyword phrases\n\nRESPOND WITH ONLY:\nTITLE: xxx\nDESCRIPTION: xxx\nTAGS: tag1, tag2, tag3, tag4, tag5, tag6, tag7, tag8, tag9, tag10, tag11, tag12, tag13';
+  return `You are an Etsy SEO expert for art posters. Look at the image and generate a listing EXACTLY matching this format and spacing.
+
+TITLE RULES - CRITICAL:
+- Format MUST be: "[Subject] Poster - [Franchise] Wall Art, [Keyword] Print, [Theme] Decor, [Audience] Gift, [Style] Art"
+- Use a hyphen-minus (-) after the first phrase, then commas for the rest
+- Example: "Miles Morales Poster - Spider-Verse Wall Art, Spider-Man Falling Print, Marvel Superhero Decor, Gaming Room Art, Comic Fan Gift, Marvel Art"
+- MUST be 135-140 characters. Count every single character including spaces. Keep adding keywords until 135-140 chars.
+- NEVER use em dashes (\u2014) or stars (\u2b50) in the title
+- NEVER use format like "\u2b50 Subject \u2014 Description \u2b50"
+
+DESCRIPTION - copy this structure EXACTLY including all blank lines between sections:
+
+[relevant topic emoji] [Subject name] \u2014 [Descriptive subtitle] [same emoji]
+
+Inspired by [franchise/source], this premium poster features [very detailed description of what you see: subject, pose, colors, background, composition, art style, mood, specific details].
+
+[One sentence about who this appeals to and what makes it a statement piece for their space].
+
+\ud83d\udd25 Love [theme] wall art and [style] art? Explore more [franchise], [related], and [style] posters in our shop \ud83d\udd25
+
+\ud83d\udd24 Features & Craftsmanship
+
+Deluxe Matte Paper: Printed on premium 170 gsm (65 lb) matte stock with a smooth, non-reflective finish for crisp detail and a gallery-quality look
+
+[Aesthetic Name based on image style]: [Describe the specific colors, composition, visual style, and details you see]
+
+Eco-Friendly Production: Printed on demand using responsibly sourced, high-quality materials
+
+Secure Packaging: Carefully rolled and shipped in a rigid protective tube to arrive in perfect condition
+
+\ud83d\udcd0 Available Sizes
+
+${sizes}
+
+Need a custom size? Message me anytime.
+
+[same topic emoji] Perfect For
+
+Bedrooms, gaming rooms, [relevant room types], and entertainment spaces with a [theme] centerpiece
+
+Interiors inspired by [subject], [franchise], [related themes], and [style] aesthetics
+
+A gift for [fan type 1], [fan type 2], [fan type 3], [fan type 4], and [theme] enthusiasts
+
+\ud83d\udce6 Shipping Info
+
+Processing Time: Orders are prepared and shipped within 1 business day
+
+Worldwide Shipping: Available to customers worldwide
+
+Secure Packaging: Carefully rolled and shipped in a durable protective tube to arrive in excellent condition
+
+Please Note: Frame not included.
+
+[same topic emoji] [Short punchy 4-6 word phrase]. [One powerful inspiring sentence about the subject]. [1-2 relevant emojis]
+
+TAGS: exactly 13 natural keyword phrases
+
+RESPOND WITH ONLY:
+TITLE: xxx
+DESCRIPTION: xxx
+TAGS: tag1, tag2, tag3, tag4, tag5, tag6, tag7, tag8, tag9, tag10, tag11, tag12, tag13`;
 }
