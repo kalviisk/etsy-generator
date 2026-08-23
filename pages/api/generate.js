@@ -1,158 +1,48 @@
-import { useState } from 'react';
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
-export default function Home() {
-  const [type, setType] = useState('phone');
-  const [variation, setVariation] = useState('1');
-  const [niche, setNiche] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState('');
-  const [copied, setCopied] = useState({});
+  const { niche, type, variation } = req.body;
+  if (!niche || !type || !variation) {
+    return res.status(400).json({ error: 'Missing fields: ' + JSON.stringify({ niche, type, variation }) });
+  }
 
-  const varDescriptions = {
-    phone: { '1': '3 tags • Short two-sentence description', '2': '4 tags • Detailed gift-style description' },
-    poster: { '1': '13 tags • Keyword-dense title • Full poster details', '2': '13 tags • Premium craftsmanship description' }
-  };
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    return res.status(500).json({ error: 'API key not configured in environment variables' });
+  }
 
-  const generate = async () => {
-    if (!niche.trim()) return;
-    setLoading(true);
-    setError('');
-    setResult(null);
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5',
+        max_tokens: 2000,
+        system: 'You are an Etsy listing generator. Generate a phone case listing with TITLE, DESCRIPTION and TAGS.',
+        messages: [{ role: 'user', content: 'Generate a listing for: ' + niche }]
+      })
+    });
 
-    try {
-      const res = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ niche: niche.trim(), type, variation })
-      });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      setResult(data);
-    } catch (err) {
-      setError('Something went wrong. Please try again.');
-    } finally {
-      setLoading(false);
+    const data = await response.json();
+
+    if (!response.ok) {
+      return res.status(500).json({ error: 'Anthropic error ' + response.status, details: data });
     }
-  };
 
-  const copyField = (key, text) => {
-    navigator.clipboard.writeText(text);
-    setCopied(prev => ({ ...prev, [key]: true }));
-    setTimeout(() => setCopied(prev => ({ ...prev, [key]: false })), 2000);
-  };
+    if (!data.content || !data.content[0]) {
+      return res.status(500).json({ error: 'No content in response', data });
+    }
 
-  const copyAll = () => {
-    if (!result) return;
-    const text = `TITLE:\n${result.title}\n\nDESCRIPTION:\n${result.description}\n\nTAGS:\n${result.tags}`;
-    navigator.clipboard.writeText(text);
-    setCopied(prev => ({ ...prev, all: true }));
-    setTimeout(() => setCopied(prev => ({ ...prev, all: false })), 2000);
-  };
+    const text = data.content[0].text;
+    return res.status(200).json({ title: 'Test OK', description: text.slice(0, 100), tags: 'test tag' });
 
-  const charCount = result?.title?.length || 0;
-  const charColor = charCount > 140 ? '#e65100' : (type === 'poster' && charCount >= 130) ? '#388e3c' : '#aaa';
-
-  return (
-    <div style={styles.page}>
-      <div style={styles.container}>
-        <h1 style={styles.h1}>Etsy Listing Generator</h1>
-        <p style={styles.subtitle}>Generate optimized titles, descriptions and tags instantly</p>
-
-        <div style={styles.card}>
-          <div style={styles.sectionTitle}>Product Type</div>
-          <div style={styles.tabs}>
-            {['phone', 'poster'].map(t => (
-              <div key={t} style={{ ...styles.tab, ...(type === t ? styles.tabActive : {}) }}
-                onClick={() => { setType(t); setVariation('1'); setResult(null); }}>
-                {t === 'phone' ? '📱 Phone Case' : '🖼️ Poster'}
-              </div>
-            ))}
-          </div>
-
-          <div style={styles.sectionTitle}>Variation</div>
-          <div style={styles.tabs}>
-            {['1', '2'].map(v => (
-              <div key={v} style={{ ...styles.varTab, ...(variation === v ? styles.varTabActive : {}) }}
-                onClick={() => { setVariation(v); setResult(null); }}>
-                Variation {v === '1' ? 'A' : 'B'}
-              </div>
-            ))}
-          </div>
-          <div style={styles.varDesc}>{varDescriptions[type][variation]}</div>
-
-          <div style={styles.sectionTitle}>Niche / Topic</div>
-          <div style={styles.inputRow}>
-            <input
-              type="text"
-              value={niche}
-              onChange={e => setNiche(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && generate()}
-              placeholder="e.g. Stitch, LOTR, Lando Norris..."
-              style={styles.input}
-            />
-            <button onClick={generate} disabled={loading} style={{ ...styles.btn, ...(loading ? styles.btnDisabled : {}) }}>
-              {loading ? 'Generating...' : 'Generate'}
-            </button>
-          </div>
-        </div>
-
-        {error && <div style={styles.error}>{error}</div>}
-
-        {result && (
-          <div style={styles.card}>
-            {[
-              { key: 'title', label: 'Title', value: result.title },
-              { key: 'description', label: 'Description', value: result.description },
-              { key: 'tags', label: 'Tags', value: result.tags }
-            ].map(({ key, label, value }) => (
-              <div key={key} style={styles.outputSection}>
-                <div style={styles.outputLabel}>
-                  <span>{label}</span>
-                  <button onClick={() => copyField(key, value)} style={{ ...styles.copyBtn, ...(copied[key] ? styles.copyBtnCopied : {}) }}>
-                    {copied[key] ? 'Copied!' : 'Copy'}
-                  </button>
-                </div>
-                <div style={styles.outputText}>{value}</div>
-                {key === 'title' && (
-                  <div style={{ fontSize: '11px', marginTop: '4px', color: charColor, fontWeight: charColor === '#388e3c' ? 500 : 400 }}>
-                    {charCount} / 140 characters
-                  </div>
-                )}
-              </div>
-            ))}
-            <button onClick={copyAll} style={styles.copyAllBtn}>
-              {copied.all ? '✓ Copied!' : 'Copy All'}
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  } catch (err) {
+    return res.status(500).json({ error: 'Fetch failed: ' + err.message });
+  }
 }
-
-const styles = {
-  page: { fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', background: '#f5f5f0', minHeight: '100vh', padding: '24px' },
-  container: { maxWidth: '800px', margin: '0 auto' },
-  h1: { fontSize: '22px', fontWeight: 600, color: '#1a1a1a', marginBottom: '6px' },
-  subtitle: { fontSize: '14px', color: '#888', marginBottom: '28px' },
-  card: { background: 'white', borderRadius: '12px', padding: '24px', marginBottom: '20px', border: '1px solid #e8e8e4' },
-  sectionTitle: { fontSize: '13px', fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '14px' },
-  tabs: { display: 'flex', gap: '8px', marginBottom: '16px' },
-  tab: { flex: 1, padding: '10px', border: '1.5px solid #e0e0da', borderRadius: '8px', background: 'white', cursor: 'pointer', fontSize: '14px', fontWeight: 500, color: '#666', textAlign: 'center', transition: 'all 0.15s' },
-  tabActive: { borderColor: '#1a1a1a', background: '#1a1a1a', color: 'white' },
-  varTab: { flex: 1, padding: '9px', border: '1.5px solid #e0e0da', borderRadius: '8px', background: 'white', cursor: 'pointer', fontSize: '13px', color: '#666', textAlign: 'center' },
-  varTabActive: { borderColor: '#555', background: '#555', color: 'white' },
-  varDesc: { fontSize: '12px', color: '#aaa', marginBottom: '16px', padding: '8px 12px', background: '#f9f9f7', borderRadius: '6px' },
-  inputRow: { display: 'flex', gap: '10px' },
-  input: { flex: 1, padding: '11px 14px', border: '1.5px solid #e0e0da', borderRadius: '8px', fontSize: '15px', color: '#1a1a1a', outline: 'none' },
-  btn: { padding: '11px 22px', background: '#1a1a1a', color: 'white', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' },
-  btnDisabled: { background: '#ccc', cursor: 'not-allowed' },
-  error: { background: '#fff0f0', border: '1px solid #ffcdd2', borderRadius: '8px', padding: '12px 14px', fontSize: '14px', color: '#c62828', marginBottom: '16px' },
-  outputSection: { marginBottom: '16px' },
-  outputLabel: { fontSize: '12px', fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  outputText: { background: '#f9f9f7', border: '1px solid #e8e8e4', borderRadius: '8px', padding: '12px 14px', fontSize: '14px', color: '#1a1a1a', lineHeight: 1.6, whiteSpace: 'pre-wrap', minHeight: '40px' },
-  copyBtn: { padding: '4px 10px', border: '1px solid #e0e0da', borderRadius: '5px', background: 'white', fontSize: '12px', color: '#666', cursor: 'pointer' },
-  copyBtnCopied: { background: '#e8f5e9', borderColor: '#a5d6a7', color: '#388e3c' },
-  copyAllBtn: { width: '100%', padding: '10px', border: '1.5px solid #e0e0da', borderRadius: '8px', background: 'white', fontSize: '14px', color: '#555', cursor: 'pointer', marginTop: '4px' }
-};
