@@ -13,11 +13,6 @@ export default function Home() {
   const [dragging, setDragging] = useState(false);
   const fileRef = useRef();
 
-  const varDescriptions = {
-    phone: { '1': '3 tags • Short two-sentence description', '2': '4 tags • Detailed gift-style description' },
-    poster: { '1': '13 tags • Keyword-dense title • Full poster details', '2': '13 tags • Premium craftsmanship description' }
-  };
-
   const handleFile = (file) => {
     if (!file || !file.type.startsWith('image/')) return;
     setImage(file);
@@ -28,12 +23,8 @@ export default function Home() {
   const handleDrop = useCallback((e) => {
     e.preventDefault();
     setDragging(false);
-    const file = e.dataTransfer.files[0];
-    handleFile(file);
+    handleFile(e.dataTransfer.files[0]);
   }, []);
-
-  const handleDragOver = (e) => { e.preventDefault(); setDragging(true); };
-  const handleDragLeave = () => setDragging(false);
 
   const toBase64 = (file) => new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -52,7 +43,7 @@ export default function Home() {
       let body;
       if (type === 'poster') {
         const base64 = await toBase64(image);
-        body = JSON.stringify({ type, variation, imageBase64: base64, mediaType: image.type || 'image/jpeg' });
+        body = JSON.stringify({ type, variation: '1', imageBase64: base64, mediaType: image.type || 'image/jpeg' });
       } else {
         body = JSON.stringify({ niche: niche.trim(), type, variation });
       }
@@ -62,7 +53,7 @@ export default function Home() {
         body
       });
       const data = await res.json();
-      if (data.error) throw new Error(data.error + (data.details ? ': ' + JSON.stringify(data.details) : ''));
+      if (data.error) throw new Error(data.error);
       setResult(data);
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
@@ -85,7 +76,7 @@ export default function Home() {
   };
 
   const charCount = result?.title?.length || 0;
-  const charColor = charCount > 140 ? '#e65100' : charCount >= 130 ? '#388e3c' : '#e65100';
+  const charColor = charCount > 140 ? '#e65100' : charCount >= 80 ? '#388e3c' : '#e65100';
 
   return (
     <div style={s.page}>
@@ -104,16 +95,19 @@ export default function Home() {
             ))}
           </div>
 
-          <div style={s.label}>Variation</div>
-          <div style={s.tabs}>
-            {['1', '2'].map(v => (
-              <div key={v} style={{ ...s.varTab, ...(variation === v ? s.varTabOn : {}) }}
-                onClick={() => { setVariation(v); setResult(null); }}>
-                Variation {v === '1' ? 'A' : 'B'}
+          {type === 'phone' && (
+            <>
+              <div style={s.label}>Variation</div>
+              <div style={s.tabs}>
+                {['1', '2'].map(v => (
+                  <div key={v} style={{ ...s.varTab, ...(variation === v ? s.varTabOn : {}) }}
+                    onClick={() => { setVariation(v); setResult(null); }}>
+                    {v === '1' ? 'Variation A — 3 tags' : 'Variation B — 4 tags'}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <div style={s.varDesc}>{varDescriptions[type][variation]}</div>
+            </>
+          )}
 
           {type === 'phone' ? (
             <>
@@ -135,8 +129,8 @@ export default function Home() {
               <div
                 onClick={() => fileRef.current.click()}
                 onDrop={handleDrop}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
+                onDragOver={e => { e.preventDefault(); setDragging(true); }}
+                onDragLeave={() => setDragging(false)}
                 style={{ ...s.dropzone, ...(dragging ? s.dropzoneActive : {}), ...(imagePreview ? s.dropzoneFilled : {}) }}>
                 {imagePreview ? (
                   <img src={imagePreview} alt="preview" style={s.preview} />
@@ -150,13 +144,9 @@ export default function Home() {
               </div>
               {image && (
                 <div style={{ ...s.row, marginTop: '10px' }}>
-                  <div style={{ flex: 1, fontSize: '13px', color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {image.name}
-                  </div>
+                  <div style={{ flex: 1, fontSize: '13px', color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{image.name}</div>
                   <button onClick={() => { setImage(null); setImagePreview(null); setResult(null); }}
-                    style={{ ...s.btn, background: '#f5f5f0', color: '#666', border: '1px solid #e0e0da', marginRight: '8px' }}>
-                    Clear
-                  </button>
+                    style={{ ...s.btn, background: '#f5f5f0', color: '#666', border: '1px solid #e0e0da', marginRight: '8px' }}>Clear</button>
                   <button onClick={generate} disabled={loading} style={{ ...s.btn, ...(loading ? s.btnOff : {}) }}>
                     {loading ? 'Analyzing...' : 'Generate'}
                   </button>
@@ -178,22 +168,19 @@ export default function Home() {
               <div key={key} style={s.outSection}>
                 <div style={s.outLabel}>
                   <span>{label}</span>
-                  <button onClick={() => copyField(key, value)}
-                    style={{ ...s.copyBtn, ...(copied[key] ? s.copyBtnOn : {}) }}>
+                  <button onClick={() => copyField(key, value)} style={{ ...s.copyBtn, ...(copied[key] ? s.copyBtnOn : {}) }}>
                     {copied[key] ? 'Copied!' : 'Copy'}
                   </button>
                 </div>
                 <div style={s.outText}>{value}</div>
                 {key === 'title' && (
                   <div style={{ fontSize: '11px', marginTop: '4px', color: charColor, fontWeight: 500 }}>
-                    {charCount} / 140 characters {charCount >= 130 && charCount <= 140 ? '✓ Good!' : charCount > 140 ? '⚠ Too long!' : '⚠ Too short!'}
+                    {charCount} / 140 characters {charCount >= 80 && charCount <= 140 ? '✓' : charCount > 140 ? '⚠ Too long!' : '⚠ Too short!'}
                   </div>
                 )}
               </div>
             ))}
-            <button onClick={copyAll} style={s.copyAll}>
-              {copied.all ? '✓ Copied All!' : 'Copy All'}
-            </button>
+            <button onClick={copyAll} style={s.copyAll}>{copied.all ? '✓ Copied All!' : 'Copy All'}</button>
           </div>
         )}
       </div>
@@ -213,7 +200,6 @@ const s = {
   tabOn: { borderColor: '#1a1a1a', background: '#1a1a1a', color: 'white' },
   varTab: { flex: 1, padding: '9px', border: '1.5px solid #e0e0da', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', color: '#666', textAlign: 'center' },
   varTabOn: { borderColor: '#555', background: '#555', color: 'white' },
-  varDesc: { fontSize: '12px', color: '#aaa', marginBottom: '16px', padding: '8px 12px', background: '#f9f9f7', borderRadius: '6px' },
   row: { display: 'flex', gap: '10px', alignItems: 'center' },
   input: { flex: 1, padding: '11px 14px', border: '1.5px solid #e0e0da', borderRadius: '8px', fontSize: '15px', color: '#1a1a1a', outline: 'none' },
   btn: { padding: '11px 22px', background: '#1a1a1a', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' },
