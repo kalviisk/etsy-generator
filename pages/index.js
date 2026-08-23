@@ -1,36 +1,67 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 export default function Home() {
   const [type, setType] = useState('phone');
   const [variation, setVariation] = useState('1');
   const [niche, setNiche] = useState('');
+  const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState({});
+  const fileRef = useRef();
 
   const varDescriptions = {
     phone: { '1': '3 tags • Short two-sentence description', '2': '4 tags • Detailed gift-style description' },
     poster: { '1': '13 tags • Keyword-dense title • Full poster details', '2': '13 tags • Premium craftsmanship description' }
   };
 
+  const handleImage = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setImage(file);
+    setImagePreview(URL.createObjectURL(file));
+    setResult(null);
+  };
+
+  const toBase64 = (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
   const generate = async () => {
-    if (!niche.trim()) return;
+    if (type === 'phone' && !niche.trim()) return;
+    if (type === 'poster' && !image) return;
+
     setLoading(true);
     setError('');
     setResult(null);
 
     try {
+      let body;
+
+      if (type === 'poster') {
+        const base64 = await toBase64(image);
+        const mediaType = image.type || 'image/jpeg';
+        body = JSON.stringify({ type, variation, imageBase64: base64, mediaType });
+      } else {
+        body = JSON.stringify({ niche: niche.trim(), type, variation });
+      }
+
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ niche: niche.trim(), type, variation })
+        body
       });
+
       const data = await res.json();
-      if (data.error) throw new Error(data.error);
+      if (data.error) throw new Error(data.error + (data.details ? ': ' + JSON.stringify(data.details) : ''));
       setResult(data);
     } catch (err) {
-      setError('Something went wrong. Please try again.');
+      setError(err.message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -51,78 +82,105 @@ export default function Home() {
   };
 
   const charCount = result?.title?.length || 0;
-  const charColor = charCount > 140 ? '#e65100' : (type === 'poster' && charCount >= 130) ? '#388e3c' : '#aaa';
+  const charColor = charCount > 140 ? '#e65100' : (charCount >= 130 ? '#388e3c' : '#aaa');
 
   return (
-    <div style={styles.page}>
-      <div style={styles.container}>
-        <h1 style={styles.h1}>Etsy Listing Generator</h1>
-        <p style={styles.subtitle}>Generate optimized titles, descriptions and tags instantly</p>
+    <div style={s.page}>
+      <div style={s.container}>
+        <h1 style={s.h1}>Etsy Listing Generator</h1>
+        <p style={s.subtitle}>Generate optimized titles, descriptions and tags instantly</p>
 
-        <div style={styles.card}>
-          <div style={styles.sectionTitle}>Product Type</div>
-          <div style={styles.tabs}>
+        <div style={s.card}>
+          <div style={s.label}>Product Type</div>
+          <div style={s.tabs}>
             {['phone', 'poster'].map(t => (
-              <div key={t} style={{ ...styles.tab, ...(type === t ? styles.tabActive : {}) }}
-                onClick={() => { setType(t); setVariation('1'); setResult(null); }}>
+              <div key={t} style={{ ...s.tab, ...(type === t ? s.tabOn : {}) }}
+                onClick={() => { setType(t); setVariation('1'); setResult(null); setImage(null); setImagePreview(null); setNiche(''); }}>
                 {t === 'phone' ? '📱 Phone Case' : '🖼️ Poster'}
               </div>
             ))}
           </div>
 
-          <div style={styles.sectionTitle}>Variation</div>
-          <div style={styles.tabs}>
+          <div style={s.label}>Variation</div>
+          <div style={s.tabs}>
             {['1', '2'].map(v => (
-              <div key={v} style={{ ...styles.varTab, ...(variation === v ? styles.varTabActive : {}) }}
+              <div key={v} style={{ ...s.varTab, ...(variation === v ? s.varTabOn : {}) }}
                 onClick={() => { setVariation(v); setResult(null); }}>
                 Variation {v === '1' ? 'A' : 'B'}
               </div>
             ))}
           </div>
-          <div style={styles.varDesc}>{varDescriptions[type][variation]}</div>
+          <div style={s.varDesc}>{varDescriptions[type][variation]}</div>
 
-          <div style={styles.sectionTitle}>Niche / Topic</div>
-          <div style={styles.inputRow}>
-            <input
-              type="text"
-              value={niche}
-              onChange={e => setNiche(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && generate()}
-              placeholder="e.g. Stitch, LOTR, Lando Norris..."
-              style={styles.input}
-            />
-            <button onClick={generate} disabled={loading} style={{ ...styles.btn, ...(loading ? styles.btnDisabled : {}) }}>
-              {loading ? 'Generating...' : 'Generate'}
-            </button>
-          </div>
+          {type === 'phone' ? (
+            <>
+              <div style={s.label}>Niche / Topic</div>
+              <div style={s.row}>
+                <input type="text" value={niche} onChange={e => setNiche(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && generate()}
+                  placeholder="e.g. Stitch, LOTR, Lando Norris..."
+                  style={s.input} />
+                <button onClick={generate} disabled={loading} style={{ ...s.btn, ...(loading ? s.btnOff : {}) }}>
+                  {loading ? 'Generating...' : 'Generate'}
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={s.label}>Poster Image</div>
+              <input type="file" accept="image/*" ref={fileRef} onChange={handleImage} style={{ display: 'none' }} />
+              <div onClick={() => fileRef.current.click()} style={s.dropzone}>
+                {imagePreview ? (
+                  <img src={imagePreview} alt="preview" style={s.preview} />
+                ) : (
+                  <div style={s.dropText}>
+                    <div style={{ fontSize: '32px', marginBottom: '8px' }}>📸</div>
+                    <div>Click to upload poster image</div>
+                    <div style={{ fontSize: '12px', color: '#aaa', marginTop: '4px' }}>JPG, PNG, WEBP supported</div>
+                  </div>
+                )}
+              </div>
+              {image && (
+                <div style={s.row}>
+                  <div style={{ flex: 1, fontSize: '13px', color: '#666', padding: '8px 0' }}>
+                    {image.name}
+                  </div>
+                  <button onClick={generate} disabled={loading} style={{ ...s.btn, ...(loading ? s.btnOff : {}) }}>
+                    {loading ? 'Analyzing...' : 'Generate'}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </div>
 
-        {error && <div style={styles.error}>{error}</div>}
+        {error && <div style={s.error}>{error}</div>}
 
         {result && (
-          <div style={styles.card}>
+          <div style={s.card}>
             {[
               { key: 'title', label: 'Title', value: result.title },
               { key: 'description', label: 'Description', value: result.description },
               { key: 'tags', label: 'Tags', value: result.tags }
             ].map(({ key, label, value }) => (
-              <div key={key} style={styles.outputSection}>
-                <div style={styles.outputLabel}>
+              <div key={key} style={s.outSection}>
+                <div style={s.outLabel}>
                   <span>{label}</span>
-                  <button onClick={() => copyField(key, value)} style={{ ...styles.copyBtn, ...(copied[key] ? styles.copyBtnCopied : {}) }}>
+                  <button onClick={() => copyField(key, value)}
+                    style={{ ...s.copyBtn, ...(copied[key] ? s.copyBtnOn : {}) }}>
                     {copied[key] ? 'Copied!' : 'Copy'}
                   </button>
                 </div>
-                <div style={styles.outputText}>{value}</div>
+                <div style={s.outText}>{value}</div>
                 {key === 'title' && (
                   <div style={{ fontSize: '11px', marginTop: '4px', color: charColor, fontWeight: charColor === '#388e3c' ? 500 : 400 }}>
-                    {charCount} / 140 characters
+                    {charCount} / 140 characters {charCount >= 130 && charCount <= 140 ? '✓' : charCount > 140 ? '(too long!)' : ''}
                   </div>
                 )}
               </div>
             ))}
-            <button onClick={copyAll} style={styles.copyAllBtn}>
-              {copied.all ? '✓ Copied!' : 'Copy All'}
+            <button onClick={copyAll} style={s.copyAll}>
+              {copied.all ? '✓ Copied All!' : 'Copy All'}
             </button>
           </div>
         )}
@@ -131,28 +189,31 @@ export default function Home() {
   );
 }
 
-const styles = {
+const s = {
   page: { fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', background: '#f5f5f0', minHeight: '100vh', padding: '24px' },
   container: { maxWidth: '800px', margin: '0 auto' },
   h1: { fontSize: '22px', fontWeight: 600, color: '#1a1a1a', marginBottom: '6px' },
   subtitle: { fontSize: '14px', color: '#888', marginBottom: '28px' },
   card: { background: 'white', borderRadius: '12px', padding: '24px', marginBottom: '20px', border: '1px solid #e8e8e4' },
-  sectionTitle: { fontSize: '13px', fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '14px' },
+  label: { fontSize: '13px', fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '14px' },
   tabs: { display: 'flex', gap: '8px', marginBottom: '16px' },
-  tab: { flex: 1, padding: '10px', border: '1.5px solid #e0e0da', borderRadius: '8px', background: 'white', cursor: 'pointer', fontSize: '14px', fontWeight: 500, color: '#666', textAlign: 'center', transition: 'all 0.15s' },
-  tabActive: { borderColor: '#1a1a1a', background: '#1a1a1a', color: 'white' },
-  varTab: { flex: 1, padding: '9px', border: '1.5px solid #e0e0da', borderRadius: '8px', background: 'white', cursor: 'pointer', fontSize: '13px', color: '#666', textAlign: 'center' },
-  varTabActive: { borderColor: '#555', background: '#555', color: 'white' },
+  tab: { flex: 1, padding: '10px', border: '1.5px solid #e0e0da', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 500, color: '#666', textAlign: 'center' },
+  tabOn: { borderColor: '#1a1a1a', background: '#1a1a1a', color: 'white' },
+  varTab: { flex: 1, padding: '9px', border: '1.5px solid #e0e0da', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', color: '#666', textAlign: 'center' },
+  varTabOn: { borderColor: '#555', background: '#555', color: 'white' },
   varDesc: { fontSize: '12px', color: '#aaa', marginBottom: '16px', padding: '8px 12px', background: '#f9f9f7', borderRadius: '6px' },
-  inputRow: { display: 'flex', gap: '10px' },
+  row: { display: 'flex', gap: '10px', alignItems: 'center' },
   input: { flex: 1, padding: '11px 14px', border: '1.5px solid #e0e0da', borderRadius: '8px', fontSize: '15px', color: '#1a1a1a', outline: 'none' },
   btn: { padding: '11px 22px', background: '#1a1a1a', color: 'white', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' },
-  btnDisabled: { background: '#ccc', cursor: 'not-allowed' },
+  btnOff: { background: '#ccc', cursor: 'not-allowed' },
+  dropzone: { border: '2px dashed #e0e0da', borderRadius: '10px', padding: '20px', cursor: 'pointer', textAlign: 'center', marginBottom: '12px', minHeight: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fafaf8' },
+  dropText: { color: '#888', fontSize: '14px' },
+  preview: { maxWidth: '100%', maxHeight: '300px', borderRadius: '8px', objectFit: 'contain' },
   error: { background: '#fff0f0', border: '1px solid #ffcdd2', borderRadius: '8px', padding: '12px 14px', fontSize: '14px', color: '#c62828', marginBottom: '16px' },
-  outputSection: { marginBottom: '16px' },
-  outputLabel: { fontSize: '12px', fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  outputText: { background: '#f9f9f7', border: '1px solid #e8e8e4', borderRadius: '8px', padding: '12px 14px', fontSize: '14px', color: '#1a1a1a', lineHeight: 1.6, whiteSpace: 'pre-wrap', minHeight: '40px' },
+  outSection: { marginBottom: '16px' },
+  outLabel: { fontSize: '12px', fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  outText: { background: '#f9f9f7', border: '1px solid #e8e8e4', borderRadius: '8px', padding: '12px 14px', fontSize: '14px', color: '#1a1a1a', lineHeight: 1.6, whiteSpace: 'pre-wrap', minHeight: '40px' },
   copyBtn: { padding: '4px 10px', border: '1px solid #e0e0da', borderRadius: '5px', background: 'white', fontSize: '12px', color: '#666', cursor: 'pointer' },
-  copyBtnCopied: { background: '#e8f5e9', borderColor: '#a5d6a7', color: '#388e3c' },
-  copyAllBtn: { width: '100%', padding: '10px', border: '1.5px solid #e0e0da', borderRadius: '8px', background: 'white', fontSize: '14px', color: '#555', cursor: 'pointer', marginTop: '4px' }
+  copyBtnOn: { background: '#e8f5e9', borderColor: '#a5d6a7', color: '#388e3c' },
+  copyAll: { width: '100%', padding: '10px', border: '1.5px solid #e0e0da', borderRadius: '8px', background: 'white', fontSize: '14px', color: '#555', cursor: 'pointer', marginTop: '4px' }
 };
