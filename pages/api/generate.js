@@ -68,13 +68,10 @@ export default async function handler(req, res) {
       }
     }
 
-    // Process tags
+    // Process tags - just clean whitespace, don't truncate
     let tags = tagsMatch ? tagsMatch[1].trim() : '';
-    let tagList = tags.split(',').map(t => {
-      const trimmed = t.trim();
-      return trimmed.length <= 20 ? trimmed : trimmed.slice(0, 20).trim();
-    }).filter(t => t.length > 0);
-    tags = tagList.slice(0, 13).join(', ');
+    let tagList = tags.split(',').map(t => t.trim()).filter(t => t.length > 0);
+    tags = tagList.join(', ');
 
     return res.status(200).json({ title, description: descMatch ? descMatch[1].trim() : '', tags });
 
