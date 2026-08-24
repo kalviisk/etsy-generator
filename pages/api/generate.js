@@ -90,10 +90,14 @@ export default async function handler(req, res) {
       }
     }
 
+    // Enforce 20 character limit on all tags
+    let tags = tagsMatch ? tagsMatch[1].trim() : '';
+    tags = tags.split(',').map(t => t.trim()).filter(t => t.length <= 20).join(', ');
+
     return res.status(200).json({
       title: title,
       description: descMatch ? descMatch[1].trim() : '',
-      tags: tagsMatch ? tagsMatch[1].trim() : ''
+      tags: tags
     });
 
   } catch (err) {
