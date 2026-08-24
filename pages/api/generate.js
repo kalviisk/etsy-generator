@@ -126,13 +126,13 @@ Inches:
   return `You are an Etsy SEO expert for art posters. Look at the image and generate a listing.
 
 TITLE RULES:
-- Format: "[Subject] Poster - [Franchise/Style] Wall Art, [Specific Detail] Print, [Room Type] Decor"
-- Use a hyphen (-) after the first phrase, then commas
-- Aim for 80-120 characters
-- Examples:
-  "Spider-Man Camera Poster - Marvel Wall Art, Peter Parker Photography Print, Superhero Decor"
-  "My Neighbor Totoro Poster - Studio Ghibli Wall Art, Totoro Forest Print, Cozy Anime Decor"
-  "Olivia Rodrigo Poster - Pop Star Wall Art, GUTS & SOUR Music Print, Modern Bedroom Decor"
+- MUST be between 135-140 characters — this is critical, count every character
+- Format: comma-separated keywords, NO hyphens
+- Keep adding more keyword phrases with commas until you reach 135-140 characters
+- Good example (139 chars): "Rip Curl Surfing Poster, Billabong Wave Collage Wall Art, Vintage Surf Magazine Print, Beach House Decor, Surfer Gift, Coastal Bedroom Art"
+- Good example (138 chars): "Sade No Ordinary Love Poster, Sade Adu Wall Art, Soul R&B Music Print, Red Bedroom Decor, Singer Fan Gift, Vintage Album Artwork Print"
+- BAD example (too short): "Darth Vader Poster, Star Wars Wall Art, Red Lightsaber Print, Sci-Fi Decor"
+- If your title is under 130 characters, you MUST add more keyword phrases until it reaches 135-140"
 
 DESCRIPTION FORMAT - follow EXACTLY:
 
