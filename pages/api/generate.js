@@ -50,13 +50,43 @@ export default async function handler(req, res) {
 
     let title = titleMatch ? titleMatch[1].trim() : '';
 
-    // Fix poster title - always end on complete phrase, target 120-140 chars
+    // Fix poster title to be 130-140 chars, always ending on complete phrase
     if (type === 'poster') {
-      // If over 140, cut at last comma
+      // If over 140, cut at last comma before 140
       if (title.length > 140) {
-        const trimmed = title.slice(0, 140);
+        const trimmed = title.slice(0, 141);
         const lastComma = trimmed.lastIndexOf(',');
-        title = lastComma > 80 ? trimmed.slice(0, lastComma).trim() : trimmed.trim();
+        title = lastComma > 80 ? trimmed.slice(0, lastComma).trim() : title.slice(0, 140).trim();
+      }
+      // If under 130, ask Claude for more keywords one by one
+      if (title.length < 130) {
+        const extraRes = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-6',
+            max_tokens: 100,
+            messages: [{ 
+              role: 'user', 
+              content: 'Current Etsy title: "' + title + '" (' + title.length + ' chars). I need it to be 130-140 chars total. Give me 2-3 short comma-separated keyword phrases to ADD at the end (just the new phrases, not the full title). Each phrase max 25 chars. Stop before reaching 140 total. Reply with ONLY the extra phrases like: ", Gothic Film Art, Saga Decor"'
+            }]
+          })
+        });
+        const extraData = await extraRes.json();
+        if (extraData.content && extraData.content[0]) {
+          let extra = extraData.content[0].text.trim();
+          if (!extra.startsWith(',')) extra = ', ' + extra;
+          const newTitle = title + extra;
+          // Only use if it doesn't exceed 140 and ends cleanly
+          if (newTitle.length <= 140) {
+            title = newTitle;
+          } else {
+            // Cut at last comma
+            const trimmed = newTitle.slice(0, 141);
+            const lastComma = trimmed.lastIndexOf(',');
+            title = lastComma > 80 ? trimmed.slice(0, lastComma).trim() : title;
+          }
+        }
       }
     }
 
