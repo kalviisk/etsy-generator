@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef } from 'react';
 
 export default function Home() {
   const [type, setType] = useState('phone');
@@ -13,18 +13,33 @@ export default function Home() {
   const [dragging, setDragging] = useState(false);
   const fileRef = useRef();
 
+  const varDescriptions = {
+    phone: {
+      '1': '10 phone model tags + 3 niche tags • Type niche',
+      '2': '10 phone model tags + 3 niche tags • Upload image'
+    },
+    poster: {
+      '1': '13 tags • Keyword-dense title • Full poster details',
+      '2': '13 tags • Premium craftsmanship description'
+    }
+  };
+
+  const needsImage = (type === 'poster') || (type === 'phone' && variation === '2');
+  const needsText = type === 'phone' && variation === '1';
+
   const handleFile = (file) => {
-    if (!file || !file.type.startsWith('image/')) return;
+    if (!file) return;
     setImage(file);
     setImagePreview(URL.createObjectURL(file));
     setResult(null);
   };
 
-  const handleDrop = useCallback((e) => {
+  const handleDrop = (e) => {
     e.preventDefault();
     setDragging(false);
-    handleFile(e.dataTransfer.files[0]);
-  }, []);
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) handleFile(file);
+  };
 
   const toBase64 = (file) => new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -34,24 +49,27 @@ export default function Home() {
   });
 
   const generate = async () => {
-    if (type === 'phone' && !niche.trim()) return;
-    if (type === 'poster' && !image) return;
+    if (needsText && !niche.trim()) return;
+    if (needsImage && !image) return;
     setLoading(true);
     setError('');
     setResult(null);
+
     try {
       let body;
-      if (type === 'poster') {
+      if (needsImage) {
         const base64 = await toBase64(image);
-        body = JSON.stringify({ type, variation: '1', imageBase64: base64, mediaType: image.type || 'image/jpeg' });
+        body = JSON.stringify({ type, variation, imageBase64: base64, mediaType: image.type || 'image/jpeg' });
       } else {
         body = JSON.stringify({ niche: niche.trim(), type, variation });
       }
+
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body
       });
+
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setResult(data);
@@ -70,13 +88,14 @@ export default function Home() {
 
   const copyAll = () => {
     if (!result) return;
-    navigator.clipboard.writeText(`TITLE:\n${result.title}\n\nDESCRIPTION:\n${result.description}\n\nTAGS:\n${result.tags}`);
+    const text = `TITLE:\n${result.title}\n\nDESCRIPTION:\n${result.description}\n\nTAGS:\n${result.tags}`;
+    navigator.clipboard.writeText(text);
     setCopied(prev => ({ ...prev, all: true }));
     setTimeout(() => setCopied(prev => ({ ...prev, all: false })), 2000);
   };
 
   const charCount = result?.title?.length || 0;
-  const charColor = charCount > 140 ? '#e65100' : charCount >= 80 ? '#388e3c' : '#e65100';
+  const charColor = charCount > 140 ? '#e65100' : (charCount >= 130 ? '#388e3c' : '#aaa');
 
   return (
     <div style={s.page}>
@@ -95,21 +114,18 @@ export default function Home() {
             ))}
           </div>
 
-          {type === 'phone' && (
-            <>
-              <div style={s.label}>Variation</div>
-              <div style={s.tabs}>
-                {['1', '2'].map(v => (
-                  <div key={v} style={{ ...s.varTab, ...(variation === v ? s.varTabOn : {}) }}
-                    onClick={() => { setVariation(v); setResult(null); }}>
-                    {v === '1' ? 'Variation A — 3 tags' : 'Variation B — 4 tags'}
-                  </div>
-                ))}
+          <div style={s.label}>Variation</div>
+          <div style={s.tabs}>
+            {['1', '2'].map(v => (
+              <div key={v} style={{ ...s.varTab, ...(variation === v ? s.varTabOn : {}) }}
+                onClick={() => { setVariation(v); setResult(null); setImage(null); setImagePreview(null); }}>
+                Variation {v === '1' ? 'A' : 'B'}
               </div>
-            </>
-          )}
+            ))}
+          </div>
+          <div style={s.varDesc}>{varDescriptions[type][variation]}</div>
 
-          {type === 'phone' ? (
+          {needsText && (
             <>
               <div style={s.label}>Niche / Topic</div>
               <div style={s.row}>
@@ -117,41 +133,42 @@ export default function Home() {
                   onKeyDown={e => e.key === 'Enter' && generate()}
                   placeholder="e.g. Stitch, LOTR, Lando Norris..."
                   style={s.input} />
-                <button onClick={generate} disabled={loading} style={{ ...s.btn, ...(loading ? s.btnOff : {}) }}>
+                <button onClick={generate} disabled={loading}
+                  style={{ ...s.btn, ...(loading ? s.btnOff : {}) }}>
                   {loading ? 'Generating...' : 'Generate'}
                 </button>
               </div>
             </>
-          ) : (
+          )}
+
+          {needsImage && (
             <>
-              <div style={s.label}>Poster Image</div>
-              <input type="file" accept="image/*" ref={fileRef} onChange={e => handleFile(e.target.files[0])} style={{ display: 'none' }} />
+              <div style={s.label}>{type === 'phone' ? 'Phone Case Image' : 'Poster Image'}</div>
+              <input type="file" accept="image/*" ref={fileRef}
+                onChange={e => handleFile(e.target.files[0])} style={{ display: 'none' }} />
               <div
                 onClick={() => fileRef.current.click()}
-                onDrop={handleDrop}
                 onDragOver={e => { e.preventDefault(); setDragging(true); }}
                 onDragLeave={() => setDragging(false)}
-                style={{ ...s.dropzone, ...(dragging ? s.dropzoneActive : {}), ...(imagePreview ? s.dropzoneFilled : {}) }}>
+                onDrop={handleDrop}
+                style={{ ...s.dropzone, ...(dragging ? s.dropzoneActive : {}) }}>
                 {imagePreview ? (
                   <img src={imagePreview} alt="preview" style={s.preview} />
                 ) : (
                   <div style={s.dropText}>
-                    <div style={{ fontSize: '36px', marginBottom: '10px' }}>📸</div>
-                    <div style={{ fontWeight: 500, marginBottom: '4px' }}>Click or drag & drop image here</div>
-                    <div style={{ fontSize: '12px', color: '#bbb' }}>JPG, PNG, WEBP supported</div>
+                    <div style={{ fontSize: '32px', marginBottom: '8px' }}>📸</div>
+                    <div>Click or drag & drop image here</div>
+                    <div style={{ fontSize: '12px', color: '#aaa', marginTop: '4px' }}>JPG, PNG, WEBP supported</div>
                   </div>
                 )}
               </div>
-              {image && (
-                <div style={{ ...s.row, marginTop: '10px' }}>
-                  <div style={{ flex: 1, fontSize: '13px', color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{image.name}</div>
-                  <button onClick={() => { setImage(null); setImagePreview(null); setResult(null); }}
-                    style={{ ...s.btn, background: '#f5f5f0', color: '#666', border: '1px solid #e0e0da', marginRight: '8px' }}>Clear</button>
-                  <button onClick={generate} disabled={loading} style={{ ...s.btn, ...(loading ? s.btnOff : {}) }}>
-                    {loading ? 'Analyzing...' : 'Generate'}
-                  </button>
-                </div>
-              )}
+              <div style={s.row}>
+                {image && <div style={{ flex: 1, fontSize: '13px', color: '#666' }}>{image.name}</div>}
+                <button onClick={generate} disabled={loading || !image}
+                  style={{ ...s.btn, ...(!image || loading ? s.btnOff : {}), marginLeft: 'auto' }}>
+                  {loading ? 'Analyzing...' : 'Generate'}
+                </button>
+              </div>
             </>
           )}
         </div>
@@ -168,19 +185,22 @@ export default function Home() {
               <div key={key} style={s.outSection}>
                 <div style={s.outLabel}>
                   <span>{label}</span>
-                  <button onClick={() => copyField(key, value)} style={{ ...s.copyBtn, ...(copied[key] ? s.copyBtnOn : {}) }}>
+                  <button onClick={() => copyField(key, value)}
+                    style={{ ...s.copyBtn, ...(copied[key] ? s.copyBtnOn : {}) }}>
                     {copied[key] ? 'Copied!' : 'Copy'}
                   </button>
                 </div>
                 <div style={s.outText}>{value}</div>
                 {key === 'title' && (
-                  <div style={{ fontSize: '11px', marginTop: '4px', color: charColor, fontWeight: 500 }}>
-                    {charCount} / 140 characters {charCount >= 80 && charCount <= 140 ? '✓' : charCount > 140 ? '⚠ Too long!' : '⚠ Too short!'}
+                  <div style={{ fontSize: '11px', marginTop: '4px', color: charColor, fontWeight: charColor === '#388e3c' ? 500 : 400 }}>
+                    {charCount} / 140 characters {charCount >= 130 && charCount <= 140 ? '✓' : charCount > 140 ? '(too long!)' : ''}
                   </div>
                 )}
               </div>
             ))}
-            <button onClick={copyAll} style={s.copyAll}>{copied.all ? '✓ Copied All!' : 'Copy All'}</button>
+            <button onClick={copyAll} style={s.copyAll}>
+              {copied.all ? '✓ Copied All!' : 'Copy All'}
+            </button>
           </div>
         )}
       </div>
@@ -200,15 +220,15 @@ const s = {
   tabOn: { borderColor: '#1a1a1a', background: '#1a1a1a', color: 'white' },
   varTab: { flex: 1, padding: '9px', border: '1.5px solid #e0e0da', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', color: '#666', textAlign: 'center' },
   varTabOn: { borderColor: '#555', background: '#555', color: 'white' },
-  row: { display: 'flex', gap: '10px', alignItems: 'center' },
+  varDesc: { fontSize: '12px', color: '#aaa', marginBottom: '16px', padding: '8px 12px', background: '#f9f9f7', borderRadius: '6px' },
+  row: { display: 'flex', gap: '10px', alignItems: 'center', marginTop: '8px' },
   input: { flex: 1, padding: '11px 14px', border: '1.5px solid #e0e0da', borderRadius: '8px', fontSize: '15px', color: '#1a1a1a', outline: 'none' },
-  btn: { padding: '11px 22px', background: '#1a1a1a', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' },
+  btn: { padding: '11px 22px', background: '#1a1a1a', color: 'white', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' },
   btnOff: { background: '#ccc', cursor: 'not-allowed' },
-  dropzone: { border: '2px dashed #e0e0da', borderRadius: '10px', padding: '30px 20px', cursor: 'pointer', textAlign: 'center', minHeight: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fafaf8', transition: 'all 0.15s' },
+  dropzone: { border: '2px dashed #e0e0da', borderRadius: '10px', padding: '20px', cursor: 'pointer', textAlign: 'center', marginBottom: '8px', minHeight: '140px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fafaf8', transition: 'all 0.15s' },
   dropzoneActive: { borderColor: '#1a1a1a', background: '#f0f0ec' },
-  dropzoneFilled: { padding: '10px', background: 'white' },
   dropText: { color: '#888', fontSize: '14px' },
-  preview: { maxWidth: '100%', maxHeight: '280px', borderRadius: '8px', objectFit: 'contain' },
+  preview: { maxWidth: '100%', maxHeight: '300px', borderRadius: '8px', objectFit: 'contain' },
   error: { background: '#fff0f0', border: '1px solid #ffcdd2', borderRadius: '8px', padding: '12px 14px', fontSize: '14px', color: '#c62828', marginBottom: '16px' },
   outSection: { marginBottom: '16px' },
   outLabel: { fontSize: '12px', fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
