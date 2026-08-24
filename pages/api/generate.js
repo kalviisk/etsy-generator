@@ -50,21 +50,34 @@ export default async function handler(req, res) {
 
     let title = titleMatch ? titleMatch[1].trim() : '';
 
-    // Retry if poster title is too short
-    if (type === 'poster' && title.length < 130) {
-      const retry = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 300,
-          messages: [{ role: 'user', content: 'This Etsy poster title is only ' + title.length + ' characters: "' + title + '". It MUST be 135-140 characters. Add more comma-separated keyword phrases at the end until it reaches 135-140 characters. Reply with ONLY the new complete title.' }]
-        })
-      });
-      const retryData = await retry.json();
-      if (retryData.content && retryData.content[0]) {
-        const newTitle = retryData.content[0].text.trim().replace(/^["']|["']$/g, '');
-        if (newTitle.length >= 130) title = newTitle.slice(0, 140);
+    // Fix poster title length - must be 135-140 chars, never cut off mid-word
+    if (type === 'poster') {
+      if (title.length > 140) {
+        // Cut at last comma before 140 chars
+        const trimmed = title.slice(0, 140);
+        const lastComma = trimmed.lastIndexOf(',');
+        title = lastComma > 100 ? trimmed.slice(0, lastComma).trim() : trimmed.trim();
+      }
+      if (title.length < 130) {
+        const retry = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-6',
+            max_tokens: 300,
+            messages: [{ role: 'user', content: 'This Etsy poster title is ' + title.length + ' characters: "' + title + '". Add comma-separated keywords at the end until total is 135-140 characters. IMPORTANT: do not exceed 140 characters. Reply with ONLY the complete title.' }]
+          })
+        });
+        const retryData = await retry.json();
+        if (retryData.content && retryData.content[0]) {
+          let newTitle = retryData.content[0].text.trim().replace(/^["']|["']$/g, '');
+          if (newTitle.length > 140) {
+            const trimmed = newTitle.slice(0, 140);
+            const lastComma = trimmed.lastIndexOf(',');
+            newTitle = lastComma > 100 ? trimmed.slice(0, lastComma).trim() : trimmed.trim();
+          }
+          if (newTitle.length >= 100) title = newTitle;
+        }
       }
     }
 
