@@ -57,12 +57,41 @@ export default async function handler(req, res) {
     }
 
     const text = data.content[0].text;
-    const titleMatch = text.match(/TITLE:\s*(.+)/);
+    let titleMatch = text.match(/TITLE:\s*(.+)/);
     const descMatch = text.match(/DESCRIPTION:\s*([\s\S]+?)(?=\nTAGS:|$)/);
     const tagsMatch = text.match(/TAGS:\s*([\s\S]+)/);
 
+    let title = titleMatch ? titleMatch[1].trim() : '';
+
+    // If title is too short for posters, retry with explicit instruction
+    if (type === 'poster' && title.length < 130) {
+      const retryResponse = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5',
+          max_tokens: 300,
+          messages: [{
+            role: 'user',
+            content: 'This Etsy poster title is only ' + title.length + ' characters long: "' + title + '". It MUST be 135-140 characters. Extend it by adding more comma-separated keyword phrases at the end. Keep adding keywords like "[Color] Wall Decor, [Style] Art Print, [Room] Poster Art, [Audience] Gift" until it reaches exactly 135-140 characters. Reply with ONLY the new title, nothing else.'
+          }]
+        })
+      });
+      const retryData = await retryResponse.json();
+      if (retryData.content && retryData.content[0]) {
+        const newTitle = retryData.content[0].text.trim().replace(/^["']|["']$/g, '');
+        if (newTitle.length >= 130) {
+          title = newTitle.slice(0, 140);
+        }
+      }
+    }
+
     return res.status(200).json({
-      title: titleMatch ? titleMatch[1].trim() : '',
+      title: title,
       description: descMatch ? descMatch[1].trim() : '',
       tags: tagsMatch ? tagsMatch[1].trim() : ''
     });
