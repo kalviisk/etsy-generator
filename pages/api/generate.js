@@ -68,24 +68,20 @@ export default async function handler(req, res) {
             max_tokens: 100,
             messages: [{ 
               role: 'user', 
-              content: 'Current Etsy title: "' + title + '" (' + title.length + ' chars). I need it to be 130-140 chars total. Give me 2-3 short comma-separated keyword phrases to ADD at the end (just the new phrases, not the full title). Each phrase max 25 chars. Stop before reaching 140 total. Reply with ONLY the extra phrases like: ", Gothic Film Art, Saga Decor"'
+              content: 'I have an Etsy title that is ' + title.length + ' characters long. I need to reach 130-140 characters. Add keyword phrases at the end. Current title: ' + title + '\n\nReply with the COMPLETE new title only. No quotes. No explanation. Just the title text ending cleanly on a complete phrase under 140 characters.'
             }]
           })
         });
         const extraData = await extraRes.json();
         if (extraData.content && extraData.content[0]) {
-          let extra = extraData.content[0].text.trim();
-          if (!extra.startsWith(',')) extra = ', ' + extra;
-          const newTitle = title + extra;
-          // Only use if it doesn't exceed 140 and ends cleanly
-          if (newTitle.length <= 140) {
-            title = newTitle;
-          } else {
-            // Cut at last comma
+          let newTitle = extraData.content[0].text.trim().replace(/^["']+|["']+$/g, '').trim();
+          // Make sure it ends cleanly
+          if (newTitle.length > 140) {
             const trimmed = newTitle.slice(0, 141);
             const lastComma = trimmed.lastIndexOf(',');
-            title = lastComma > 80 ? trimmed.slice(0, lastComma).trim() : title;
+            newTitle = lastComma > 80 ? trimmed.slice(0, lastComma).trim() : newTitle.slice(0, 140).trim();
           }
+          if (newTitle.length >= title.length) title = newTitle;
         }
       }
     }
