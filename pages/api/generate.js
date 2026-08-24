@@ -84,31 +84,26 @@ export default async function handler(req, res) {
 }
 
 function getPhonePrompt(variation) {
-  const phoneModelTags = 'iPhone phone case, iPhone 17 case, Google Pixel case, Samsung phone case, iPhone 16 case, iphone 15 case, iphone 14 case, iphone 13 case, pixel 10 pro case, samsung a56 case';
-
   const brandTags = 'NICHE TAG RULES - always include relevant franchise:\n- Disney: one tag must be "disney phone case"\n- Ghibli: one tag must be "ghibli phone case"\n- Star Wars: one tag must be "star wars case"\n- Sanrio: one tag must be "sanrio phone case"\n- F1: one tag must be "f1 phone case"\n- Marvel: one tag must be "marvel phone case"\n- Nintendo: one tag must be "nintendo phone case"\n- Anime: one tag must be "anime phone case"\n- Kpop: one tag must be "kpop phone case"';
 
-  const nicheTagExamples = 'NICHE TAG EXAMPLES (tags 11, 12, 13):\n- MGK: "MGK Phone case, Machine Gun Kelly, MGK merch"\n- Stray Kids: "Boy band skz, SKZ Phone case, Stray kids"\n- Bloodborne: "Bloodborne, bloodborne cover, gamer phone case"\n- Hatsune Miku: "Vocaloid Phone case, Hatsune Miku, Blue Hatsune case"\n- Totoro: "totoro phone case, cute ghibli case, studio ghibli case"\n- Apothecary Diaries: "Apothecary Diaries, Mao mao phone case, apothecary cover"\nPattern: Tag 11 = [niche/character] phone case OR [niche] alone, Tag 12 = character/franchise name, Tag 13 = [niche] merch OR [franchise] phone case OR [style] phone case';
+  const nicheTagExamples = 'NICHE TAG EXAMPLES:\n- MGK: "MGK Phone case, Machine Gun Kelly, MGK merch"\n- Stray Kids: "Boy band skz, SKZ Phone case, Stray kids"\n- Bloodborne: "Bloodborne, bloodborne cover, gamer phone case"\n- Hatsune Miku: "Vocaloid Phone case, Hatsune Miku, Blue Hatsune case"\n- Totoro: "totoro phone case, cute ghibli case, studio ghibli case"\n- Dachshund: "dachshund phone case, wiener dog case, cute dog phone case"\nPattern: Tag 1 = [niche] phone case, Tag 2 = [character/franchise name] or [niche] alone, Tag 3 = [franchise] phone case OR [style] phone case OR [niche] merch';
 
   const basePrompt = `You are an Etsy SEO expert for phone cases.
 
-TITLE FORMAT: [Character/Niche] Phone Case [Simple Descriptor] Cover for iPhone 17e, 17Pro, 16e, 16, 15, 14, 13, 12, Samsung S26, A56, S25, S24, A16, Pixel 10, 10Pro, 9
-- Always mention franchise for characters (e.g. "Levi Ackerman Phone Case Attack on Titan Cover for iPhone...")
-- Simple searchable descriptor only
+TITLE FORMAT: [Character/Niche] Phone Case [Simple Descriptor] Cover
+- Always mention franchise for characters (e.g. "Levi Ackerman Phone Case Attack on Titan Anime Cover")
+- Simple searchable descriptor only, no device list
 
-DESCRIPTION: "When you choose this [Full Title without device list], you're picking a design inspired by [niche], blending [energy] and bold [aesthetic] vibes. while keeping your device protected and stylish [2-3 emojis]"
+DESCRIPTION: "When you choose this [Full Title], you're picking a design inspired by [niche], blending [energy] and bold [aesthetic] vibes. while keeping your device protected and stylish [2-3 emojis]"
 
-TAGS - CRITICAL FORMAT (exactly 13 tags):
-Tags 1-10 are ALWAYS these exact phone model tags (copy exactly):
-${phoneModelTags}
-Tags 11-13 are niche-specific (each under 20 characters):
+TAGS - CRITICAL FORMAT (exactly 3 niche-specific tags, each under 20 characters):
 ${brandTags}
 ${nicheTagExamples}
 
 RESPOND WITH ONLY:
 TITLE: xxx
 DESCRIPTION: xxx
-TAGS: iPhone phone case, iPhone 17 case, Google Pixel case, Samsung phone case, iPhone 16 case, iphone 15 case, iphone 14 case, iphone 13 case, pixel 10 pro case, samsung a56 case, [tag11], [tag12], [tag13]`;
+TAGS: [tag1], [tag2], [tag3]`;
 
   if (variation === '2') {
     return basePrompt.replace('You are an Etsy SEO expert for phone cases.', 'You are an Etsy SEO expert for phone cases. Look at the phone case image provided and identify the design/niche, then generate a listing.');
