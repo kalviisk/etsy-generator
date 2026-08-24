@@ -50,34 +50,13 @@ export default async function handler(req, res) {
 
     let title = titleMatch ? titleMatch[1].trim() : '';
 
-    // Fix poster title length - must be 135-140 chars, never cut off mid-word
+    // Fix poster title - always end on complete phrase, target 120-140 chars
     if (type === 'poster') {
+      // If over 140, cut at last comma
       if (title.length > 140) {
-        // Cut at last comma before 140 chars
         const trimmed = title.slice(0, 140);
         const lastComma = trimmed.lastIndexOf(',');
-        title = lastComma > 100 ? trimmed.slice(0, lastComma).trim() : trimmed.trim();
-      }
-      if (title.length < 130) {
-        const retry = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-          body: JSON.stringify({
-            model: 'claude-sonnet-4-6',
-            max_tokens: 300,
-            messages: [{ role: 'user', content: 'This Etsy poster title is ' + title.length + ' characters: "' + title + '". Add comma-separated keywords at the end until total is 135-140 characters. IMPORTANT: do not exceed 140 characters. Reply with ONLY the complete title.' }]
-          })
-        });
-        const retryData = await retry.json();
-        if (retryData.content && retryData.content[0]) {
-          let newTitle = retryData.content[0].text.trim().replace(/^["']|["']$/g, '');
-          if (newTitle.length > 140) {
-            const trimmed = newTitle.slice(0, 140);
-            const lastComma = trimmed.lastIndexOf(',');
-            newTitle = lastComma > 100 ? trimmed.slice(0, lastComma).trim() : trimmed.trim();
-          }
-          if (newTitle.length >= 100) title = newTitle;
-        }
+        title = lastComma > 80 ? trimmed.slice(0, lastComma).trim() : trimmed.trim();
       }
     }
 
@@ -124,7 +103,7 @@ TAGS: [tag1], [tag2], [tag3]`;
 function getPosterPrompt(variation) {
   const sizes = 'Metric:\n13\u00d718 cm, 15\u00d720 cm, 27\u00d735 cm, 28\u00d743 cm, A3 (29.7\u00d742 cm), 30\u00d740 cm, 30\u00d745 cm, 40\u00d750 cm, 40\u00d760 cm, A2 (42\u00d759.4 cm), 45\u00d760 cm, 50\u00d770 cm, A1 (59.4\u00d784.1 cm), 60\u00d780 cm, 60\u00d790 cm, 70\u00d7100 cm, 75\u00d7100 cm\nInches:\n5\u00d77", 6\u00d78", 11\u00d714", 11\u00d717", 12\u00d716", 12\u00d718", 16\u00d720", 16\u00d724", 18\u00d724", 20\u00d728", 24\u00d732", 24\u00d736", 28\u00d740", 30\u00d740"';
 
-  const titleRules = 'TITLE RULES - CRITICAL:\n- Comma-separated keywords, NO hyphens\n- MUST be 135-140 characters — count every character\n- Good example (139 chars): "Rip Curl Surfing Poster, Billabong Wave Wall Art, Vintage Surf Magazine Print, Beach House Decor, Surfer Gift, Coastal Bedroom Art"\n- Keep adding keyword phrases until you reach 135-140 characters\n- If under 130 chars you MUST add more keywords';
+  const titleRules = 'TITLE RULES - CRITICAL:\n- Comma-separated keyword phrases, NO hyphens\n- Target 120-140 characters BUT always end on a complete phrase — never cut off mid-word\n- Each phrase is: [Niche] Poster, [Subject] Wall Art, [Style] Print, [Room] Decor, [Audience] Gift, [Theme] Art\n- Good example: "Twilight Poster, Forks Forest Wall Art, Dark Academia Movie Print, Vampire Bedroom Decor, Gothic Romance Poster, Twilight Fan Gift"\n- Good example: "Sade No Ordinary Love Poster, Sade Adu Wall Art, Soul R&B Music Print, Red Bedroom Decor, Singer Fan Gift, Vintage Album Art"\n- STOP adding phrases when the next phrase would push you over 140 characters\n- The last phrase must be complete — never end with a partial word';
 
   const tagRules = 'TAGS - CRITICAL RULES:\n- Exactly 13 tags\n- Each tag STRICTLY under 20 characters including spaces\n- NEVER repeat same keyword across tags\n- Mix: subject name, franchise/artist, art style, room type, color/mood, audience, print type\n- Good example (anime poster): "apothecary diaries, maomao poster, anime wall art, botanical anime art, palace mystery art, manga room decor, oriental wall art, historical anime, apothecary decor, tea room poster, anime fan gift, maomao wall art, elegant anime print"\n- Each tag = different buyer search intent';
 
