@@ -39,7 +39,7 @@ export default async function handler(req, res) {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5',
+        model: 'claude-sonnet-4-6',
         max_tokens: 2000,
         system: systemPrompt,
         messages
@@ -73,7 +73,7 @@ export default async function handler(req, res) {
           'anthropic-version': '2023-06-01'
         },
         body: JSON.stringify({
-          model: 'claude-haiku-4-5',
+          model: 'claude-sonnet-4-6',
           max_tokens: 300,
           messages: [{
             role: 'user',
@@ -91,7 +91,12 @@ export default async function handler(req, res) {
     // Enforce 20 char tag limit, keep exactly 13
     let tags = tagsMatch ? tagsMatch[1].trim() : '';
     let tagList = tags.split(',').map(t => t.trim()).filter(t => t.length > 0 && t.length <= 20);
-    tags = tagList.slice(0, 13).join(', ');
+    // Truncate tags that are slightly over 20 chars instead of removing them
+    let allTags = tags.split(',').map(t => {
+      const trimmed = t.trim();
+      return trimmed.length <= 20 ? trimmed : trimmed.slice(0, 20).trim();
+    }).filter(t => t.length > 0);
+    tags = allTags.slice(0, 13).join(', ');
 
     return res.status(200).json({ title, description: descMatch ? descMatch[1].trim() : '', tags });
 
